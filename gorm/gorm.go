@@ -47,19 +47,18 @@ func main() {
 
 	// uncomment when changes have been made to the user struct or when starting fresh
 	// db.AutoMigrate(&User{})
-	log.Println("Migrated user table")
+	// log.Println("Migrated user table")
 
 	// // uncomment when changes have been made or when starting fresh
 	// db.AutoMigrate(&Book{})
-	log.Println("Migrated book table")
+	// log.Println("Migrated book table")
 
 	// call the create methods
-	createBook()
-	createUser()
-	
+	create()
+	Retreive()
 }
 
-func createUser() {
+func create() {
 	newUser := User{
 		FirstName: "Victor",
 		LastName:  "Iheanacho",
@@ -70,38 +69,67 @@ func createUser() {
 	// it also automatically knows which table to create an entry in based on the type used
 	db.Create(&newUser)
 	// after creation of the user, the user struct we passed to it now has an ID field gotten from the auto-increment in the db table
-	fmt.Println(newUser.ID)
+	fmt.Println("user id after query: ",newUser.ID)
 
 	// we can also add the .Error option to check for any errors, this is always advisable 
-	err := db.Create(&newUser).Error
-	if err != nil {
-		log.Fatal(err)
-	}
+	// err := db.Create(&newUser).Error 
 
 
-	// the create method used above returns a db that points to the user table
-	// doing this would attempt to create a new entry in that same table as well
-	// newBook := Book{
-	// 	Title: "little fears",
-	// 	Author: "james wilson",
-	// }
-	// err = db.Create(&newBook).Error
-	// if err != nil {
-	// 	log.Println(err)
-	// }
-}
-
-func createBook() {
 	newBook := Book{
 		Title: "little fears",
 		Author: "james wilson",
 	}
-
-	// the create method used above returns a db that points to the user table
-	// doing this would attempt to create a new entry in that same table as well
+	// it automatically knows which table to put the data in
 	err := db.Create(&newBook).Error
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Println(newBook.ID)
+	fmt.Println("book id after query i: ", newBook.ID)
 }
+
+func Retreive() {
+	// find all 
+	//first we declare an array of structs to hold the data
+	// then we pass a pointer to that address using gorm 
+
+	// find all users 
+	var users []User
+	db.Find(&users) // SELECT * FROM users;
+	// the users slice declared above would now contain all the users in the user table
+	// fmt.Println(users)  
+
+	// find all books 
+	var books []Book
+	db.Find(&books) // SELECT * FROM books;
+	// fmt.Println(books[0])
+
+	// find by ID 
+	var user User
+	// this pattern only works where the id is the primary key and is also an integer 
+	db.First(&user, 10) // select all from users where id = 10
+
+	// find by attribute 
+
+	// plain method
+	// getting just one 
+	db.Where("firstname = ?", "emma").First(&user) // select * from users where firstname = emma limit 1
+	// getting all that match where clause 
+	db.Where("firstname = ?", "emma").Find(&users) // select * from users where firstname = emma
+
+	// struct method 
+	db.Where(&Book{Title: "john", Author: "cole" }).Find(&user) // SELECT * FROM users WHERE Title = "john" AND Author = "cole" LIMIT 1;
+
+	//inline method
+	// these methods take the output struct as the first value 
+	db.Find(&users, User{FirstName: "alhaji", LastName: "rozy"}) //struct
+	db.First(&user, "firstname = ?", "emma") // returns the first match
+
+
+
+}
+
+func Update() {
+	var user User
+	db.Model(&user).Where(&User{Age: 7}).Updates(User{FirstName: "victor", Age: 24})
+}
+
