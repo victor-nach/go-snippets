@@ -55,7 +55,8 @@ func main() {
 
 	// call the create methods
 	create()
-	Retreive()
+	// Retreive()
+	Update()
 }
 
 func create() {
@@ -129,7 +130,57 @@ func Retreive() {
 }
 
 func Update() {
+	// to update fields using gorm we can first get a reference to that user using:
 	var user User
-	db.Model(&user).Where(&User{Age: 7}).Updates(User{FirstName: "victor", Age: 24})
+
+	// select * from users where firstname = emma limit 1
+	// db.Where("firstname = ?", "emma").First(&user)
+	// or 
+	db.First(&user, 2) // select all from users where id = 2
+	fmt.Println("selected user id", user.ID)
+
+	// then we can now use the user we have as a reference for where we want to update 
+
+	// METHOD 1:
+	// we can change the values before calling save and passing an updated struct
+	// we can change the values we want
+	user.Age = 14
+	db.Save(&user) //save would include all fields when updating the field, even if they were not changed
+	// note that this is UPDATE users ... (it updates more than one user if matched)
+	fmt.Println("updated user: ", user)
+
+	// METHOD 2:
+	// we can use updates with a struct containing updated fields, note that only changed fields and non-empty fields would be updated
+	// we can also add more than one check using where
+	// UPDATE users SET first_name = 'victor', age = 24, updated_at = '....' WHERE id = 2 AND age = 7
+	// db.Model(&user) is used to specify the user we want to change 
+	db.Model(&user).Where(&User{Age: 7}).Updates(User{FirstName: "musa", Age: 24})
+	fmt.Println("updated user: ", user)
+
+	// we can use .Select and .Omit to specify fields we want or do not want to be updated
+	// db.Model(&user).Select("") // ** test to see if .Select works with struct
 }
 
+func Delete() {
+	//we use the .Delete method to delete records as well
+	// just as in the case for the update method we need to first select the user
+	var user User
+	db.First(&user, 2)
+
+	// when using delete gorm uses the primary key to delete the record 
+	// you need to make sure that a primary key exists if not gorm would delete all records !!! 
+	db.Delete(&user)
+	// Also .Delete automatically soft deletes if the field has a delete_at column, it doesnt actually remove it
+	// it unscopes it so that when you try to pull records it won't show up
+
+	// to view a field that has been soft deleted, you can use db.Unscoped().Where()...
+	var users []User
+	db.Unscoped().Where(&User{Age: 4}).Find(&users) // would return all values in and out of scope (deleted)
+
+	// to delete a record permanently
+	// db.Unscoped().Delete(&user) 
+
+}
+ func ErrorHandling() {
+	 // how to handle errors
+ }
