@@ -1,0 +1,4 @@
+DB_URL = mongodb+srv://victor:<password>@victor-nach-gq3xj.mongodb.net/test?retryWrites=true&w=majority
+
+// the mongo db url does not connect to any specific database, more like a cluster
+// /etc/resolv.conf to fix dns if needed..
