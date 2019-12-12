@@ -59,7 +59,7 @@ func main() {
 
 	Create()
 	Retreive()
-	Insert()
+	Update()
 }
 
 func Create() {
@@ -162,7 +162,8 @@ func Retreive() {
 	// FIND ALL USERS
 
 	var users []User
-	cur, err := collection.Find(context.TODO(), bson.D{{}})
+	// we use the options.FindOne() to set custom delimeter for the find
+	cur, err := collection.Find(context.TODO(), bson.D{{}}, options.Find().SetLimit(5))
 	if err != nil {
 		log.Println(err)
 	}
@@ -180,10 +181,34 @@ func Retreive() {
 		cur.Decode(&user)
 		users = append(users, user)
 	}
-	// log.Println("all users in the db: ", users)
+	log.Println("all users in the db: ", users)
 }
 
-func Insert() {
-	log.Println("\n Insrt...........")
+func Update() {
+	log.Println("\n Update...........")
 
+	collection := client.Database("test").Collection("users")
+	// to update our documents, we need bson documents for both the filters and the updates
+	// note that a bson map has to always have a key and value
+	filter := bson.M{
+		"$and": []bson.M{
+				bson.M{"firstname": "daniel"},
+				bson.M{"lastname": "Anudu"},
+		},
+	}
+
+	query := bson.M{
+		"$set": bson.M{
+			"age": 22,
+		},
+	}
+	
+	// for the update one query, the updated result is returned
+	var user User
+	updateResult, err := collection.UpdateOne(context.TODO(), filter, query)
+	if err != nil {
+		log.Println(err)
+	}
+	err = updateResult.UnmarshalBSON(&user)
+	log.Println(&updateResult)
 }
