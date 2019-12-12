@@ -4,22 +4,28 @@ import (
 	"context"
 	"fmt"
 	"log"
+	// "time"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type User struct {
-	FirstName string
-	LastName  string
-	Age       int
+	ID			primitive.ObjectID		`json:"id,omitempty" bson:"_id,omitempty"` 
+	// note that you don't have to specify the bson, automatically mongo adds an id field and also all the field names in a struct are changed to lower case in the collection
+	FirstName 	string					`json:"firstName,omitempty" bson:"firstname,omitempty"`
+	LastName  	string					`json:"lastName,omitempty" bson:"lastname,omitempty"`
+	Age       	int						`json:"age,omitempty bson:"age,omitempty"`
 }
 
 type Book struct {
-	Title   		string
-	Author  		string
-	Type    		string 
-	ReadersCount   	*string
+	ID 				primitive.ObjectID
+	Title        string
+	Author       string
+	Type         string
+	ReadersCount *string
 }
 
 var client *mongo.Client
@@ -32,6 +38,7 @@ func main() {
 	// makes a connection to the database and returns a new *mongo.client
 	// takes in a context and an options parameter
 	var err error
+	// ctx := context.WithTimeout(context.Background(), 10*time.Second) // alternative context to use
 	client, err = mongo.Connect(context.TODO(), clientOptions)
 
 	if err != nil {
@@ -41,7 +48,7 @@ func main() {
 	// verifies that the client can connect to the topology
 	err = client.Ping(context.TODO(), nil)
 
-	if err!= nil {
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -51,21 +58,26 @@ func main() {
 	// collection := client.Database("test").Collection("users")
 
 	Create()
+	Retreive()
+	Insert()
 }
 
 func Create() {
+	fmt.Println("\nCreate........")
 	// get a handle for a particular collection
 	// if the database or collection does not exist, a new one is created
-	// as usual, it has no structure so we can put anything inside 
+	// as usual, it has no structure so we can put anything inside
 	collection := client.Database("test").Collection("users")
 	// collection
 
-	// Create a single book
+	// Create a single book struct
 	user := User{
 		FirstName: "Iheanacho Victor",
-		LastName: "Nonso",
-		Age: 24,
+		LastName:  "Nonso",
+		Age:       24,
 	}
+
+	// then we pass in this struct to the collection.insertOne with a context
 	result, err := collection.InsertOne(context.TODO(), user)
 	if err != nil {
 		log.Println(err)
@@ -75,28 +87,103 @@ func Create() {
 
 	// INSERT MANY
 	// to insert many documents we pass a slice
-	users := []interface{}{
-		User{
-			FirstName: "daniel",
-			LastName: "Anudu",
-			Age: 15,
-		},
-		User{
-			FirstName: "Anthony",
-			LastName: "fred",
-			Age: 76,
-		},
-		User{
-			FirstName: "Amaka",
-			LastName: "mgbaegbu",
-			Age: 45,
-		},
-	}
+	// users := []interface{}{
+	// 	User{
+	// 		FirstName: "daniel",
+	// 		LastName:  "Anudu",
+	// 		Age:       15,
+	// 	},
+	// 	User{
+	// 		FirstName: "Anthony",
+	// 		LastName:  "fred",
+	// 		Age:       76,
+	// 	},
+	// 	User{
+	// 		FirstName: "Amaka",
+	// 		LastName:  "mgbaegbu",
+	// 		Age:       45,
+	// 	},
+	// }
 
 	// returns an array of ids
-	insertManyResult, err := collection.InsertMany(context.TODO(), users)
+	// insertManyResult, err := collection.InsertMany(context.TODO(), users)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(insertManyResult)
+}
+
+func Retreive() {
+	fmt.Println("\nRetreive........")
+	// to retreive we need to use a filter
+
+	// first we get a handle to the collection we want to insert into
+	collection := client.Database("test").Collection("users")
+
+	// FIND ONE USER
+	var user User
+
+	// when writing your filters, you have to use the fieldnames as stored in the collection or as defined in the bson tags on the structs
+	// whuch would be different from the structs names(lowercase)
+	// a bson document could contain other bson.E literals, in the case below, the inner object is converted to bson.E
+	filter := bson.D{{"firstname", "daniel"}}
+	err := collection.FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
-	fmt.Println(insertManyResult)
+	// the returned struct doesn't contain the bson id if not added to the struct's field
+	log.Println("find one using bson: ", user)
+
+	// err = collection.FindOne(context.TODO(), User{FirstName: "Anthony"}).Decode(&user) // didn't work when using structs
+
+	// using multiple filter options we use bson.M, that contains an "$or" and an array of of other bson documents
+	// "$or": []bson.M{ bson.M{}, bson.M{} }
+	filter2 := bson.M{
+		"$or": []bson.M{
+			bson.M{"firstname": "Anthony"},
+			bson.M{"lastname": "fred"},
+		},
+	}
+	err = collection.FindOne(context.TODO(), filter2).Decode(&user)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println("Using multiple filter options: ", user);
+	
+
+	// Searching using mongodb object id
+	id, _ := primitive.ObjectIDFromHex("5ddfdfea5d248400d5be16b7")
+	err = collection.FindOne(context.TODO(), bson.D{{"_id", id}}).Decode(&user)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println("Using object id to search: ", user);
+
+	// FIND ALL USERS
+
+	var users []User
+	cur, err := collection.Find(context.TODO(), bson.D{{}})
+	if err != nil {
+		log.Println(err)
+	}
+
+	// it is advisable to defer closing of the cursor immediately after you get it
+	defer cur.Close(context.TODO())
+
+	// check for errors in getting the cursor
+	if err = cur.Err(); err != nil {
+		log.Println(err)
+	}
+	// the cursor returned contains an loopable collection of all the data found
+	for cur.Next(context.TODO()) {
+		var user User
+		cur.Decode(&user)
+		users = append(users, user)
+	}
+	// log.Println("all users in the db: ", users)
+}
+
+func Insert() {
+	log.Println("\n Insrt...........")
+
 }
