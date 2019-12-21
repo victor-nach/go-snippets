@@ -13,6 +13,7 @@ func main() {
 	// test with different values
 	fmt.Println(GetNewMemID("aab19"))
 	fmt.Println(GetNewMemID("aab18"))
+	fmt.Println(GetNewMemID("xyz18"))
 	fmt.Println(GetNewMemID("zzz19"))
 	fmt.Println(GetNewMemID("zz19"))
 	fmt.Println(GetNewMemID("zz19a"))
@@ -41,9 +42,9 @@ func GetNewMemID(recentMemID string) (string, error) {
 	currentYear := strconv.Itoa(time.Now().Year())
 	if recentMemID[3:] != currentYear[2:] {
 		recentMemID = "AAA" + currentYear[2:]
-
+		
 		// check that it doesn't exist in the db
-		return recentMemID, nil
+		// return recentMemID, nil
 	}
 
 	for i:= range alpha {
