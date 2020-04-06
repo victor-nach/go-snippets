@@ -1,0 +1,16 @@
+// A proto file defines a service
+// for each service in our microservices architecture we have a .proto file that defines the rpc calls that service exposes
+// more like the api endpoints available
+
+syntax = "proto3";
+
+// under the service block in the proto file we define the different rpc calls or methods we wish to expose
+// the different calls request and respond with some form of data that we also have to define in the .proto file
+service ServiceName {
+    rpc sampleRpcCall(sampleRequest) returns (sampleResponse) {}
+}
+
+// we still have to define what sampleRequest and sampleResponse means
+// the message types in the proto file are like our data structure, you can also have custom types
+
+
