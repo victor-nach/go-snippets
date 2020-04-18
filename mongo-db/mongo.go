@@ -6,15 +6,20 @@ import (
 	"log"
 	// "time"
 
+	// import mongo driver utils
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// for connection to mongodb, we use the MongoDB go driver
+// install using `go get go.mongodb.org/mongo-driver`
+
 type User struct {
 	ID			primitive.ObjectID		`json:"id,omitempty" bson:"_id,omitempty"` 
-	// note that you don't have to specify the bson, automatically mongo adds an id field and also all the field names in a struct are changed to lower case in the collection
+	// note that you don't have to specify the bson, 
+	// automatically mongo adds an id field and also all the field names in a struct are changed to lower case in the collection
 	FirstName 	string					`json:"firstName,omitempty" bson:"firstname,omitempty"`
 	LastName  	string					`json:"lastName,omitempty" bson:"lastname,omitempty"`
 	Age       	int						`json:"age,omitempty bson:"age,omitempty"`
