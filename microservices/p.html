@@ -1,0 +1,33 @@
+<p>Your last visits to this page:</p>
+<div id="last-visits"></div>
+<script type="text/javascript">
+  function getCookie(name) {
+    var result = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    if (result) {
+        return (result[2]);
+    } else {
+        return null;
+    }
+}
+function setCookie(name,value,expiredays){
+     var exdate = new Date();
+     exdate.setDate(exdate.getDate()+expiredays);
+     document.cookie = name+"="+escape(value)+((expiredays==null)?"":";expires="+exdate.toGMTString());
+ }
+ function last_visits() {
+     var max_visits = 5;
+     var cookie = getCookie("last_visits");
+     var visits = (cookie != null) ? JSON.parse(cookie) : [];
+     if (visits.length == max_visits) {
+          visits.pop();
+     }
+     visits.unshift({date: new Date().toString()});
+     setCookie("last_visits", visits, 1);
+     for (var i = 0, html="<ul>"; i < visits.length; i++) {
+         html += "<li>" + visits[i].date + "</li>";
+     }
+     html += "</ul>";
+     document.getElementById("last-visits").innerHTML = html;
+ }
+   window.onload = function () { last_visits(); };
+</script>

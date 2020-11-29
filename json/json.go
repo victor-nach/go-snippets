@@ -23,6 +23,12 @@ type Person struct {
 	Houses		*House	`json:"houses,omitempty"`
 }
 
+
+type Target struct {
+	Id			string	`json:"id"`
+	Message 	string	`json:"message"`
+}
+
 	// Tags provide conventions for built-in parsing, they are not strict rules 
 	// Different packages use tags for various reasons e.g json,bson,gorm .....
 
@@ -30,15 +36,20 @@ type Person struct {
 func main() {
 	// Marshall returns the json encoding of a data interface as a byte array
 	// the encoding of each field can be customized by the format string stored under the "json" key in the struct
-	emma := Person{
+	// emma := Person{
+	// 	FName: "emmanuel",
+	// 	LName: "Iheanacho",
+	// 	Age: 23,
+	// 	nationality: "Nigerian",
+	// }
+	byte, _ := json.Marshal(Person{
 		FName: "emmanuel",
 		LName: "Iheanacho",
 		Age: 23,
 		nationality: "Nigerian",
-	}
-	byte, _ := json.Marshal(emma)
-	fmt.Println(byte) // returns a lenghty byte array
-	fmt.Println(string(byte)) 
+	})
+	// fmt.Println(byte) // returns a lenghty byte array
+	// fmt.Println(string(byte)) 
 
 	//marshall for maps
 
@@ -48,6 +59,15 @@ func main() {
 	var victor Person
 	json.Unmarshal(byte, &victor)
 	fmt.Println(victor)
+
+	payload, _ := json.Marshal(Target{
+		Id: "12345",
+		Message: "hello from this side",
+	})
+	// fmt.Println(payload)
+	var victorr Target
+	json.Unmarshal(payload, &victorr)
+	fmt.Println(victorr)
 	
 	// Encoding
 	// An Encoder(type Encoder) writes json values to an output stream
